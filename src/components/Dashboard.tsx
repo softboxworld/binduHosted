@@ -381,14 +381,14 @@ export default function Dashboard() {
               <div className="flex items-center space-x-2 sm:space-x-4">
                 
 
-                {/* Notifications */}
+                {/* Notifications
                 <button
                   className={`relative p-1.5 sm:p-2 ${getThemeStyle(theme, 'header', 'buttonHover')} rounded-full transition-colors`}
                   title="Notifications"
                 >
                   <Bell className={`h-4 w-4 sm:h-5 sm:w-5 ${getThemeStyle(theme, 'text', 'accent')}`} />
                   <span className="absolute top-0.5 right-0.5 h-1.5 w-1.5 sm:h-2 sm:w-2 bg-red-500 rounded-full"></span>
-                </button>
+                </button> */}
 
                 {/* User Profile */}
                 <div 

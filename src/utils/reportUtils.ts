@@ -76,12 +76,12 @@ export const generateWorkerReport = (
       project.name,
       task.description,
       task.status,
-      `${currencySymbol}${task.amount.toFixed(2)}`
+      `${task.amount.toFixed(2)}`
     ];
   });
   
   autoTable(pdf, {
-    head: [['Date', 'Project', 'Description', 'Status', 'Amount']],
+    head: [['Date', 'Project', 'Description', 'Status', `Amount(${currencySymbol})`]],
     body: tableData,
     startY: 90,
     theme: 'grid',
