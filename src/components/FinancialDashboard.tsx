@@ -9,12 +9,11 @@ import {
   startOfDay, 
   endOfDay,
 } from 'date-fns';
-import { Calendar, FileText, Download, DollarSign, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Calendar, FileText, Download, DollarSign, CreditCard, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { CURRENCIES } from '../utils/constants';
-import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { PaymentMethod } from '../types/inventory';
 
@@ -43,16 +42,6 @@ interface Payment {
 // Add type for payment method keys
 type PaymentMethodKey = PaymentMethod;
 
-// Add types for the client data
-interface ClientData {
-  name: string;
-}
-
-interface OrderWithClient {
-  order_number: string;
-  status: string;
-  client: ClientData | null;
-}
 
 const CARD_COLORS: Record<PaymentMethodKey, { bg: string; text: string; border: string }> = {
   'mobile_money': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
@@ -316,7 +305,7 @@ export default function FinancialDashboard() {
             if (!salesOrderError && salesOrderData) {
               orderDetails = {
                 order_number: salesOrderData.order_number,
-                client_name: salesOrderData.clients?.name || 'N/A',
+                client_name: (salesOrderData.clients as any)?.name || 'N/A',
                 status: salesOrderData.status
               };
             }
@@ -337,7 +326,7 @@ export default function FinancialDashboard() {
             if (!orderError && orderData) {
               orderDetails = {
                 order_number: orderData.order_number,
-                client_name: orderData.clients?.name || 'N/A',
+                client_name: (orderData.clients as any)?.name || 'N/A',
                 status: orderData.status
               };
             }
@@ -372,28 +361,158 @@ export default function FinancialDashboard() {
   };
 
   const handleExportPDF = async () => {
-    if (!dashboardRef.current) return;
-
     try {
-      const canvas = await html2canvas(dashboardRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const imgWidth = 297; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const tableWidth = pageWidth - (2 * margin);
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Header
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Financial Report', margin, margin + 10);
       
+      // Date range
       const dateRange = startDate && endDate 
-        ? `${format(startDate, 'MMM d, yyyy')}-${format(endDate, 'MMM d, yyyy')}`
+        ? `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`
         : format(new Date(), 'MMM d, yyyy');
       
-      pdf.save(`financial-report-${dateRange}.pdf`);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Date Range: ${dateRange}`, margin, margin + 20);
+      
+      // Summary stats
+      const currencyName = organization?.currency || 'USD';
+      pdf.setFontSize(10);
+      pdf.text(`Total Revenue: ${currencyName} ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, margin, margin + 30);
+      pdf.text(`Total Transactions: ${transactionCount}`, margin + 80, margin + 30);
+      pdf.text(`Most Popular Method: ${mostPopularMethod ? mostPopularMethod.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'N/A'}`, margin + 160, margin + 30);
+      
+      // Table headers
+      const tableStartY = margin + 45;
+      const rowHeight = 8;
+      const colWidths = [35, 25, 30, 25, 40]; // Order, Amount, Method, Date, Customer
+      const colPositions = [margin, margin + colWidths[0], margin + colWidths[0] + colWidths[1], margin + colWidths[0] + colWidths[1] + colWidths[2], margin + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]];
+      
+      // Header row background
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, tableStartY, tableWidth, rowHeight, 'F');
+      
+      // Header text
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Order', colPositions[0] + 2, tableStartY + 6);
+      pdf.text(`Amount (${currencyName})`, colPositions[1] + 2, tableStartY + 6);
+      pdf.text('Method', colPositions[2] + 2, tableStartY + 6);
+      pdf.text('Date', colPositions[3] + 2, tableStartY + 6);
+      pdf.text('Customer', colPositions[4] + 2, tableStartY + 6);
+      
+      // Table rows
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      
+      let currentY = tableStartY + rowHeight;
+      let pageNumber = 1;
+      const maxRowsPerPage = Math.floor((pageHeight - currentY - 20) / rowHeight);
+      let rowCount = 0;
+      
+      // Filter out cancelled payments for the table
+      const activePayments = payments.filter(p => p.status !== 'cancelled' && p.order_details?.status !== 'cancelled');
+      
+      for (let i = 0; i < activePayments.length; i++) {
+        const payment = activePayments[i];
+        
+        // Check if we need a new page
+        if (rowCount >= maxRowsPerPage) {
+          pdf.addPage();
+          pageNumber++;
+          currentY = margin + 20;
+          rowCount = 0;
+          
+          // Add header to new page
+          pdf.setFontSize(20);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Financial Report (continued)', margin, margin + 10);
+          
+          // Header row background
+          pdf.setFillColor(240, 240, 240);
+          pdf.rect(margin, currentY, tableWidth, rowHeight, 'F');
+          
+          // Header text
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Order', colPositions[0] + 2, currentY + 6);
+          pdf.text(`Amount (${currencyName})`, colPositions[1] + 2, currentY + 6);
+          pdf.text('Method', colPositions[2] + 2, currentY + 6);
+          pdf.text('Date', colPositions[3] + 2, currentY + 6);
+          pdf.text('Customer', colPositions[4] + 2, currentY + 6);
+          
+          currentY += rowHeight;
+          rowCount++;
+        }
+        
+        // Alternate row background
+        if (rowCount % 2 === 0) {
+          pdf.setFillColor(250, 250, 250);
+          pdf.rect(margin, currentY, tableWidth, rowHeight, 'F');
+        }
+        
+        // Row data
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        
+        // Order number (truncate if too long)
+        const orderNumber = payment.order_details?.order_number || 'N/A';
+        pdf.text(orderNumber.length > 15 ? orderNumber.substring(0, 12) + '...' : orderNumber, colPositions[0] + 2, currentY + 6);
+        
+        // Amount
+        pdf.text(payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2 }), colPositions[1] + 2, currentY + 6);
+        
+        // Payment method (truncate if too long)
+        const method = payment.payment_method.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        pdf.text(method.length > 12 ? method.substring(0, 9) + '...' : method, colPositions[2] + 2, currentY + 6);
+        
+        // Date
+        pdf.text(format(new Date(payment.created_at), 'MMM d, yyyy'), colPositions[3] + 2, currentY + 6);
+        
+        // Customer name (truncate if too long)
+        const customerName = payment.order_details?.client_name || 'N/A';
+        pdf.text(customerName.length > 18 ? customerName.substring(0, 15) + '...' : customerName, colPositions[4] + 2, currentY + 6);
+        
+        currentY += rowHeight;
+        rowCount++;
+      }
+      
+      // Add total row
+      currentY += 5;
+      pdf.setFillColor(220, 220, 220);
+      pdf.rect(margin, currentY, tableWidth, rowHeight, 'F');
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text('TOTAL', colPositions[0] + 2, currentY + 6);
+      pdf.text(`${activePayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, colPositions[1] + 2, currentY + 6);
+      pdf.text(`${activePayments.length} transactions`, colPositions[2] + 2, currentY + 6);
+      
+      // Footer with page numbers
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 30, pageHeight - 10);
+        pdf.text(`Generated on ${format(new Date(), 'MMM d, yyyy h:mm a')}`, margin, pageHeight - 10);
+      }
+      
+      const filename = `financial-report-${dateRange.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      pdf.save(filename);
+      
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: 'PDF report generated successfully'
+      });
     } catch (error) {
       console.error('Error generating PDF:', error);
       addToast({
