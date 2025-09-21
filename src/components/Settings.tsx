@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 import { Building2, AlertTriangle, UserX, Globe, Building, MapPin, 
-  Users, Coins, Package, ArrowLeft, Moon, Sun, Download } from 'lucide-react';
+  Users, Coins, Package, ArrowLeft, Moon, Sun, Download, Phone } from 'lucide-react';
 import { useUI } from '../context/UIContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -35,13 +35,14 @@ export default function Settings() {
     city: organization?.city || '',
     address: organization?.address || '',
     employee_count: organization?.employee_count || 15,
+    phone: organization?.phone || '',
     currency: organization?.currency || 'GHS'
   });
   const [isSaving, setIsSaving] = useState(false);
   const { confirm, addToast } = useUI();
 
   const handleSave = async () => {
-    if (!editedOrg.name.trim()) {
+    if (!editedOrg.name.trim() || !organization) {
       setIsEditing(false);
       return;
     }
@@ -56,6 +57,7 @@ export default function Settings() {
           city: editedOrg.city,
           address: editedOrg.address,
           employee_count: editedOrg.employee_count,
+          phone: editedOrg.phone,
           currency: editedOrg.currency
         })
         .eq('id', organization.id);
@@ -63,7 +65,7 @@ export default function Settings() {
       if (error) throw error;
 
       useAuthStore.setState({
-        organization: { ...organization, ...editedOrg }
+        organization: { ...organization, ...editedOrg, name: editedOrg.name.trim() }
       });
       setIsEditing(false);
       
@@ -85,6 +87,8 @@ export default function Settings() {
   };
 
   const handleDeleteOrganization = async () => {
+    if (!organization) return;
+
     const confirmed = await confirm({
       title: 'Delete Organization',
       message: 'Are you sure you want to delete your organization? This will permanently delete all workers, tasks, and associated data. This action cannot be undone.',
@@ -271,6 +275,19 @@ export default function Settings() {
                   </div>
 
                   <div>
+                    <label className={`block text-sm font-medium ${getThemeStyle(theme, 'text', 'secondary')}`}>Phone Number</label>
+                    <div className="mt-1">
+                      <input
+                        type="tel"
+                        value={editedOrg.phone}
+                        onChange={(e) => setEditedOrg(prev => ({ ...prev, phone: e.target.value }))}
+                        className={`block w-full px-3 py-2 rounded-md border ${getThemeStyle(theme, 'border', 'primary')} ${getThemeStyle(theme, 'background', 'primary')} ${getThemeStyle(theme, 'text', 'primary')} focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
                     <label className={`block text-sm font-medium ${getThemeStyle(theme, 'text', 'secondary')}`}>Number of Employees</label>
                     <div className="mt-1">
                       <select
@@ -320,6 +337,7 @@ export default function Settings() {
                         city: organization?.city || '',
                         address: organization?.address || '',
                         employee_count: organization?.employee_count || 15,
+                        phone: organization?.phone || '',
                         currency: organization?.currency || 'GHS'
                       });
                     }}
@@ -381,6 +399,16 @@ export default function Settings() {
                         <p className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'muted')}`}>Currency</p>
                         <p className={`text-base ${getThemeStyle(theme, 'text', 'primary')}`}>
                           {organization?.currency} ({CURRENCIES[organization?.currency || '']?.symbol}) - {CURRENCIES[organization?.currency || '']?.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <Phone className={`h-5 w-5 ${getThemeStyle(theme, 'text', 'accent')}`} />
+                      <div>
+                        <p className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'muted')}`}>Phone Number</p>
+                        <p className={`text-base ${getThemeStyle(theme, 'text', 'primary')}`}>
+                          {organization?.phone || 'Not provided'}
                         </p>
                       </div>
                     </div>

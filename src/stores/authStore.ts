@@ -11,6 +11,7 @@ interface Organization {
   address?: string;
   employee_count?: number;
   currency: string;
+  phone: string;
   subscription_tier?: string;
   subscription_status?: string;
   created_at?: string;

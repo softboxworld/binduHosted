@@ -55,6 +55,7 @@ interface OrderReceiptProps {
 const generateReceiptHTML = (
     organizationName: string,
     organizationAddress: string | undefined,
+    organizationPhone: string | undefined,
     selectedClient: Client,
     orderData: any,
     selectedServices: OrderService[],
@@ -221,7 +222,11 @@ const generateReceiptHTML = (
         ` : ''}
 
         <div class="footer">
-          <div class="text">Thank you for doing business with us :)</div>
+          <div class="text">Thank you for doing business with us</div>
+        </div>
+
+        <div class="footer">
+          <div class="text-small">Contact Us: ${organizationPhone || 'N/A'}</div>
         </div>
       </div>
     </body>
@@ -351,6 +356,7 @@ export default function OrderReceipt({ orderId, onClose }: OrderReceiptProps) {
                 generateReceiptHTML(
                     organization?.name || '',
                     organization?.address,
+                    organization?.phone,
                     selectedClient,
                     orderData,
                     selectedServices,
@@ -504,7 +510,14 @@ export default function OrderReceipt({ orderId, onClose }: OrderReceiptProps) {
 
                     {/* Footer */}
                     <div className="mt-6 text-center">
-                        <p className={`text-[12px] ${getThemeStyle(theme, 'text', 'secondary')}`}>Thank you for doing business with us :)</p>
+                        <p className={`text-[12px] ${getThemeStyle(theme, 'text', 'secondary')}`}>Thank you for doing business with us</p>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="mt-2 text-center">
+                        <p className={`text-[10px] ${getThemeStyle(theme, 'text', 'muted')}`}>
+                            Contact Us: {organization?.phone || 'N/A'}
+                        </p>
                     </div>
                 </div>
             </div>
