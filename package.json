@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "predeploy": "npm run build && echo sten360.teemboom.com > dist/CNAME && cp dist/index.html dist/404.html && rm -r ../sten360supabasehosted/* && cp -r dist/* ../sten360supabasehosted/",
+    "predeploy": "npm run build && echo mybindu.app > dist/CNAME && cp dist/index.html dist/404.html && rm -r ../binduHosted/* && cp -r dist/* ../binduHosted/",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
