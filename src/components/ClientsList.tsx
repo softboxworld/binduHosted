@@ -994,7 +994,16 @@ export default function ClientsList() {
               </thead>
               <tbody className={`${getThemeStyle(theme, 'background', 'secondary')}`}>
                 {clients.map(client => (
-                  <tr key={client.id} className={`border-b ${getThemeStyle(theme, 'border', 'primary')} ${getThemeStyle(theme, 'interactive', 'hover', 'background')} cursor-pointer`}>
+                  <tr 
+                    key={client.id} 
+                    className={`border-b ${getThemeStyle(theme, 'border', 'primary')} ${getThemeStyle(theme, 'interactive', 'hover', 'background')} cursor-pointer`}
+                    onClick={(e) => {
+                      // Don't navigate if clicking on checkbox
+                      if (!(e.target as HTMLElement).closest('input[type="checkbox"]')) {
+                        window.location.href = `/dashboard/clients/${client.id}`;
+                      }
+                    }}
+                  >
                     {isEditMode && (
                       <td className="px-3 py-2 whitespace-nowrap">
                         <input
@@ -1005,50 +1014,45 @@ export default function ClientsList() {
                         />
                       </td>
                     )}
-                    <Link
-                      to={`/dashboard/clients/${client.id}`}
-                      className="contents"
-                    >
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <div className={`h-10 w-10 rounded-full ${getThemeStyle(theme, 'avatar', 'background')} flex items-center justify-center ${getThemeStyle(theme, 'avatar', 'text')} text-sm font-medium overflow-hidden`}>
-                          {client.image_url ? (
-                            <img 
-                              src={client.image_url} 
-                              alt={client.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            client.name.charAt(0).toUpperCase()
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <div className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'primary')}`}>
-                          {client.name}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <div className={`text-xs ${getThemeStyle(theme, 'text', 'tertiary')}`}>
-                          {client.phone || 'No phone'}
-                        </div>
-                        <div className={`text-xs ${getThemeStyle(theme, 'text', 'tertiary')}`}>
-                          {client.address}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <div className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'primary')}`}>
-                          {currencySymbol} {client.total_spent?.toFixed(2) || '0.00'}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-right">
-                        <div className={`text-sm font-medium ${client.total_balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {currencySymbol} {client.total_balance.toFixed(2)}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-center">
-                        <ChevronRight className={`h-5 w-5 mx-auto ${getThemeStyle(theme, 'text', 'tertiary')}`} />
-                      </td>
-                    </Link>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className={`h-10 w-10 rounded-full ${getThemeStyle(theme, 'avatar', 'background')} flex items-center justify-center ${getThemeStyle(theme, 'avatar', 'text')} text-sm font-medium overflow-hidden`}>
+                        {client.image_url ? (
+                          <img 
+                            src={client.image_url} 
+                            alt={client.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          client.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'primary')}`}>
+                        {client.name}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      <div className={`text-xs ${getThemeStyle(theme, 'text', 'tertiary')}`}>
+                        {client.phone || 'No phone'}
+                      </div>
+                      <div className={`text-xs ${getThemeStyle(theme, 'text', 'tertiary')}`}>
+                        {client.address}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-right">
+                      <div className={`text-sm font-medium ${getThemeStyle(theme, 'text', 'primary')}`}>
+                        {currencySymbol} {client.total_spent?.toFixed(2) || '0.00'}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-right">
+                      <div className={`text-sm font-medium ${client.total_balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                        {currencySymbol} {client.total_balance.toFixed(2)}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-center">
+                      <ChevronRight className={`h-5 w-5 mx-auto ${getThemeStyle(theme, 'text', 'tertiary')}`} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

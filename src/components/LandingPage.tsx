@@ -75,7 +75,7 @@ export default function LandingPage() {
               <div>
                 <h1 className="text-4xl xs:text-5xl font-bold text-white leading-tight">
                   All Systems Go.
-                  <span className="block text-gray-300 mt-2">Make your business use Tech</span>
+                  <span className="block text-gray-300 mt-2">Make your business use Tech - Updated! 🚀</span>
                 </h1>
                 <p className="mt-6 text-base xs:text-lg text-gray-300 max-w-[90%] sm:max-w-[70%] lg:max-w-full mx-auto lg:mx-0">
                   Our platform manages everything: clients, staff, orders, inventory, payments, and receipts—simple like drinking koko

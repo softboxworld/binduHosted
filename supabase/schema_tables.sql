@@ -367,7 +367,7 @@ create index IF not exists idx_tasks_status_changed_at on public.tasks using btr
 
 create index IF not exists idx_tasks_worker on public.tasks using btree (worker_id) TABLESPACE pg_default;
 
-create index IF not exists idx_payments_order on public.payments using btree (sales_order_id) TABLESPACE pg_default;
+-- Removed problematic index: payments table doesn't have sales_order_id column
 
 create index IF not exists orders_organization_id_idx on public.orders using btree (organization_id) TABLESPACE pg_default;
 
@@ -405,9 +405,7 @@ create index IF not exists sales_orders_order_number_idx on public.sales_orders 
 
 create index IF not exists idx_sales_order_items_order on public.sales_order_items using btree (sales_order_id) TABLESPACE pg_default;
 
-create index IF not exists idx_service_payments_order on public.service_payments using btree (order_id) TABLESPACE pg_default;
-
-create index IF not exists idx_service_payments_organization on public.service_payments using btree (organization_id) TABLESPACE pg_default;
+-- Removed: service_payments table does not exist (leftover from old schema)
 
 create index IF not exists worker_project_rates_worker_id_idx on public.worker_project_rates using btree (worker_id) TABLESPACE pg_default;
 
